@@ -39,13 +39,13 @@ If you just want to train/classify or visualise the output of the network, use t
 
 ```
 training: (and show summary or results)
-usage: python train.py -t [-v|-s]
+usage: python train-now.py -t [-v|-s]
 
 classification:
-usage: python train.py -c image.jpg
+usage: python train-now.py -c image.jpg
 
 visualisation:
-usage: python train.py -V
+usage: python train-new.py -V
 ```
 
 ##### Segmentation
@@ -55,7 +55,7 @@ Included in this repo are two [Haar cascade](https://en.m.wikipedia.org/wiki/Vio
 If you want to segment the *Tom & Jerry* videos into images, use this tool:
 
 ```
-python segmentation.py
+python segmentation-now.py
 ```
 
 ##### Notebook
