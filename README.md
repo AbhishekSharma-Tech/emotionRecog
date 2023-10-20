@@ -1,4 +1,4 @@
-# dissertation
+# Minor Project
 
 This repository holds my final year project during my time at the [University](https://www.google.com/) titled *'Deep Learning for Emotion Recognition in Cartoons'*.
 
