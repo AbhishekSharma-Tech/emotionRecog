@@ -1,35 +1,23 @@
 
 import os
 import sys
-import copy
 import numpy as np
-import matplotlib.image as img
 import matplotlib.pyplot as plt
 
 from PIL import Image
 from tensorflow import keras
 from keras import backend as K
 from keras import optimizers
-from tensorflow.keras.callbacks import TensorBoard, Callback
-from tensorflow.keras.utils import to_categorical as one_hot
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Activation, Dropout, Flatten, Dense
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-from tensorflow.keras import optimizers
+from keras.callbacks import TensorBoard, Callback
+from keras.utils import to_categorical as one_hot
+from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
+from keras.preprocessing.image import array_to_img, img_to_array, load_img
 
-# from vis.utils import utils
-# from vis.visualization import visualize_activation, visualize_saliency, get_num_filters
-# from vis.utils import utils
-# from vis.visualization import visualize_activation, visualize_saliency
-# from vis.visualization import visualize_activation
-# from vis.utils import get_num_filters
-
-# from tf_keras_vis.utils import utils
 from tf_keras_vis.activation_maximization import ActivationMaximization
 from tf_keras_vis.utils.scores import CategoricalScore
-# from tf_keras_vis.utils import array_to_img
 
 
-model_version = "v1.6"
+model_version = "v1"
 emotions = ["happy", "angry", "surprise", "sad", "fear", "disgust"]
 w, h = (60, 60)
 epochs = 50
@@ -42,7 +30,49 @@ COLOR = {
 
 # PlotStats callback for printing custom plot stats of the model.
 class PlotStats(Callback):
+    # This function is called when the training begins
+    def on_train_begin(self, logs={}):
+        # Initialize the lists for holding the logs, losses and accuracies
+        self.losses = []
+        self.acc = []
+        self.val_losses = []
+        self.val_acc = []
+        self.logs = []
+
+    # This function is called at the end of each epoch
+    def on_epoch_end(self, epoch, logs={}):
+        # Append the logs, losses and accuracies to the lists
+        self.logs.append(logs)
+        self.losses.append(logs.get('loss'))
+        self.acc.append(logs.get('accuracy'))
+        self.val_losses.append(logs.get('val_loss'))
+        self.val_acc.append(logs.get('val_accuracy'))
+
     def on_train_end(self, logs={}):
+        # Before plotting ensure at least 2 epochs have passed
+        if len(self.losses) > 1:
+
+            N = np.arange(0, len(self.losses))
+
+            # You can chose the style of your preference
+            # print(plt.style.available) to see the available options
+            #plt.style.use("seaborn")
+
+            # Plot train loss, train acc, val loss and val acc against epochs passed
+            plt.figure()
+            plt.plot(N, self.losses, label = "train_loss")
+            plt.plot(N, self.acc, label = "train_acc")
+            plt.plot(N, self.val_losses, label = "val_loss")
+            plt.plot(N, self.val_acc, label = "val_acc")
+            plt.title("Training Loss and Accuracy")
+            plt.xlabel(f'epochs ({epochs})')
+            plt.ylabel("Loss/Accuracy")
+            plt.legend()
+            # Make sure there exists a folder called output in the current directory
+            # or replace 'output' with whatever direcory you want to put in the plots
+            plt.savefig('./output/Epoch.png')
+            plt.close()
+        
         # model loss plot.
         plt.plot(self.losses)
         plt.plot(self.val_losses, color="green")
@@ -51,7 +81,7 @@ class PlotStats(Callback):
         plt.xlabel(f'epochs ({epochs})')
         plt.legend(['training', 'testing'], loc='upper left')
         plt.savefig(f'model_{model_version}_loss.png')
-        plt.gcf().clf()
+        plt.close()
 
         # model accuracy plot.
         plt.plot(self.acc)
@@ -61,19 +91,7 @@ class PlotStats(Callback):
         plt.xlabel(f'epochs ({epochs})')
         plt.legend(['training', 'testing'], loc='upper left')
         plt.savefig(f'model_{model_version}_accuracy.png')
-        plt.gcf().clf()
-
-    def on_train_begin(self, logs={}):
-        self.losses = []
-        self.acc = []
-        self.val_acc = []
-        self.val_losses = []
-
-    def on_epoch_end(self, batch, logs={}):
-        self.losses.append(logs.get('loss'))
-        self.val_losses.append(logs.get('val_loss'))
-        self.acc.append(logs.get('acc'))
-        self.val_acc.append(logs.get('val_acc'))
+        plt.close()
 
 # loads the emotion datasets and constructs them into numpy arrays
 # for training & testing for a character.
@@ -166,10 +184,9 @@ def process_images(fp):
     imgs = []
     for f in fp:
         img = load_img(f)
-        # img = img.resize((w, h), Image.ANTIALIAS)
         img = img.resize((w, h), Image.LANCZOS)
         img = img_to_array(img) / 255
-        img = img.reshape(3, w, h)
+        img = img.reshape(w, h, 3)
         imgs.append(img)
     return np.array(imgs)
 
@@ -337,15 +354,15 @@ def load_cnn_model():
 
 
     # 3x3 convolution & 2x2 maxpooling.
-    cnn.add(Conv2D(32, (3, 3), activation='relu', padding='same', name='conv_layer_2'))
+    # cnn.add(Conv2D(32, (3, 3), activation='relu', padding='same', name='conv_layer_2'))
     # cnn.add(MaxPooling2D(pool_size=(2, 2), name='maxpool_2'))
-    cnn.add(MaxPooling2D(pool_size=(2, 2), padding='same', name='maxpool_2'))
+    # cnn.add(MaxPooling2D(pool_size=(2, 2), padding='same', name='maxpool_2'))
 
 
     # 3x3 convolution & 9x9 maxpooling.
-    cnn.add(Conv2D(32, (3, 3), activation='relu', padding='same', name='conv_layer_3'))
+    # cnn.add(Conv2D(32, (3, 3), activation='relu', padding='same', name='conv_layer_3'))
     # cnn.add(MaxPooling2D(pool_size=(9, 9), name='maxpool_3'))
-    cnn.add(MaxPooling2D(pool_size=(2, 2), padding='same', name='maxpool_3'))
+    # cnn.add(MaxPooling2D(pool_size=(2, 2), padding='same', name='maxpool_3'))
 
 
     # dropout 50% and flatten layer.
@@ -357,6 +374,7 @@ def load_cnn_model():
     cnn.add(Dense(6, activation='softmax', name='output_layer'))
     # o = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
     o = optimizers.SGD(learning_rate=0.01, momentum=0.9, nesterov=True)
+    # o = optimizers.RMSprop(learning_rate=0.01, momentum=0.9,)
     cnn.compile(loss='categorical_crossentropy', optimizer=o, metrics=['accuracy'])
 
     # return the cnn model.

@@ -39,10 +39,10 @@ If you just want to train/classify or visualise the output of the network, use t
 
 ```
 training: (and show summary or results)
-usage: python train-now.py -t [-v|-s]
+usage: python train-tr.py -t [-v|-s]
 
 classification:
-usage: python train-now.py -c image.jpg
+usage: python train-new.py -c image.jpg
 
 visualisation:
 usage: python train-new.py -V
